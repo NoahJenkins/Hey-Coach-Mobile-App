@@ -58,7 +58,7 @@ export class OpenRouterService {
     try {
       // Don't support streaming in this simplified version
       const completion = await this.client.chat.completions.create({
-        model: options.model || 'openai/gpt-4o', // Default to GPT-4o
+        model: options.model || process.env.OPENROUTER_DEFAULT_MODEL || 'google/gemini-2.0-flash-001', // Use env var or Gemini as default
         messages: options.messages,
         temperature: options.temperature || 0.7,
         max_tokens: options.maxTokens || 1000,
