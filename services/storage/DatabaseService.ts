@@ -7,12 +7,197 @@ export class DatabaseService {
   async initialize(): Promise<void> {
     try {
       this.db = await SQLite.openDatabaseAsync('heycoach.db');
-      await this.createTables();
+      await this.migrateDatabase();
       console.log('Database initialized successfully');
     } catch (error) {
       console.error('Failed to initialize database:', error);
       throw error;
     }
+  }
+
+  private async migrateDatabase(): Promise<void> {
+    if (!this.db) throw new Error('Database not initialized');
+
+    try {
+      // Check if this is a fresh database or needs migration
+      const tableCheck = await this.db.getFirstAsync(`
+        SELECT name FROM sqlite_master WHERE type='table' AND name='workouts'
+      `) as any;
+
+      if (!tableCheck) {
+        // Fresh database - create all tables
+        await this.createTables();
+      } else {
+        // Try migration, but if it fails, reset the database
+        try {
+          await this.performMigrations();
+        } catch (migrationError) {
+          console.warn('Migration failed, resetting database:', migrationError);
+          await this.resetDatabase();
+          await this.createTables();
+        }
+      }
+    } catch (error) {
+      console.warn('Database migration failed, resetting:', error);
+      await this.resetDatabase();
+      await this.createTables();
+    }
+  }
+
+  private async resetDatabase(): Promise<void> {
+    if (!this.db) throw new Error('Database not initialized');
+
+    try {
+      // Drop all tables
+      await this.db.execAsync(`DROP TABLE IF EXISTS coach_insights`);
+      await this.db.execAsync(`DROP TABLE IF EXISTS coach_recommendations`);
+      await this.db.execAsync(`DROP TABLE IF EXISTS exercise_muscle_groups`);
+      await this.db.execAsync(`DROP TABLE IF EXISTS sets`);
+      await this.db.execAsync(`DROP TABLE IF EXISTS exercises`);
+      await this.db.execAsync(`DROP TABLE IF EXISTS workouts`);
+      console.log('Database tables dropped successfully');
+    } catch (error) {
+      console.warn('Error dropping tables:', error);
+    }
+  }
+
+  private async performMigrations(): Promise<void> {
+    if (!this.db) throw new Error('Database not initialized');
+
+    // Check if workouts table has the expected columns
+    const workoutColumns = await this.db.getAllAsync(`PRAGMA table_info(workouts)`) as any[];
+    const columnNames = workoutColumns.map(col => col.name);
+
+    // Add missing columns if they don't exist
+    if (!columnNames.includes('start_time')) {
+      try {
+        await this.db.execAsync(`ALTER TABLE workouts ADD COLUMN start_time TEXT`);
+        // Populate start_time from existing date column if possible
+        await this.db.execAsync(`UPDATE workouts SET start_time = date WHERE start_time IS NULL`);
+      } catch (error) {
+        console.warn('Could not add start_time column:', error);
+      }
+    }
+
+    if (!columnNames.includes('end_time')) {
+      try {
+        await this.db.execAsync(`ALTER TABLE workouts ADD COLUMN end_time TEXT`);
+      } catch (error) {
+        console.warn('Could not add end_time column:', error);
+      }
+    }
+
+    if (!columnNames.includes('is_completed')) {
+      try {
+        await this.db.execAsync(`ALTER TABLE workouts ADD COLUMN is_completed INTEGER DEFAULT 0`);
+      } catch (error) {
+        console.warn('Could not add is_completed column:', error);
+      }
+    }
+
+    if (!columnNames.includes('is_synced')) {
+      try {
+        await this.db.execAsync(`ALTER TABLE workouts ADD COLUMN is_synced INTEGER DEFAULT 0`);
+      } catch (error) {
+        console.warn('Could not add is_synced column:', error);
+      }
+    }
+
+    if (!columnNames.includes('coach_rating')) {
+      try {
+        await this.db.execAsync(`ALTER TABLE workouts ADD COLUMN coach_rating INTEGER`);
+      } catch (error) {
+        console.warn('Could not add coach_rating column:', error);
+      }
+    }
+
+    if (!columnNames.includes('user_motivation')) {
+      try {
+        await this.db.execAsync(`ALTER TABLE workouts ADD COLUMN user_motivation TEXT`);
+      } catch (error) {
+        console.warn('Could not add user_motivation column:', error);
+      }
+    }
+
+    if (!columnNames.includes('created_at')) {
+      try {
+        await this.db.execAsync(`ALTER TABLE workouts ADD COLUMN created_at TEXT DEFAULT CURRENT_TIMESTAMP`);
+      } catch (error) {
+        console.warn('Could not add created_at column:', error);
+      }
+    }
+
+    if (!columnNames.includes('updated_at')) {
+      try {
+        await this.db.execAsync(`ALTER TABLE workouts ADD COLUMN updated_at TEXT DEFAULT CURRENT_TIMESTAMP`);
+      } catch (error) {
+        console.warn('Could not add updated_at column:', error);
+      }
+    }
+
+    // Check exercises table
+    const exerciseTableCheck = await this.db.getFirstAsync(`
+      SELECT name FROM sqlite_master WHERE type='table' AND name='exercises'
+    `) as any;
+
+    if (!exerciseTableCheck) {
+      await this.createExercisesTable();
+    } else {
+      // Check exercises table columns
+      const exerciseColumns = await this.db.getAllAsync(`PRAGMA table_info(exercises)`) as any[];
+      const exerciseColumnNames = exerciseColumns.map(col => col.name);
+
+      if (!exerciseColumnNames.includes('workout_id')) {
+        try {
+          await this.db.execAsync(`ALTER TABLE exercises ADD COLUMN workout_id TEXT`);
+        } catch (error) {
+          console.warn('Could not add workout_id column to exercises:', error);
+        }
+      }
+
+      if (!exerciseColumnNames.includes('category')) {
+        try {
+          await this.db.execAsync(`ALTER TABLE exercises ADD COLUMN category TEXT`);
+        } catch (error) {
+          console.warn('Could not add category column to exercises:', error);
+        }
+      }
+
+      if (!exerciseColumnNames.includes('total_duration')) {
+        try {
+          await this.db.execAsync(`ALTER TABLE exercises ADD COLUMN total_duration INTEGER`);
+        } catch (error) {
+          console.warn('Could not add total_duration column to exercises:', error);
+        }
+      }
+
+      if (!exerciseColumnNames.includes('distance')) {
+        try {
+          await this.db.execAsync(`ALTER TABLE exercises ADD COLUMN distance REAL`);
+        } catch (error) {
+          console.warn('Could not add distance column to exercises:', error);
+        }
+      }
+
+      if (!exerciseColumnNames.includes('calories')) {
+        try {
+          await this.db.execAsync(`ALTER TABLE exercises ADD COLUMN calories INTEGER`);
+        } catch (error) {
+          console.warn('Could not add calories column to exercises:', error);
+        }
+      }
+
+      if (!exerciseColumnNames.includes('created_at')) {
+        try {
+          await this.db.execAsync(`ALTER TABLE exercises ADD COLUMN created_at TEXT DEFAULT CURRENT_TIMESTAMP`);
+        } catch (error) {
+          console.warn('Could not add created_at column to exercises:', error);
+        }
+      }
+    }
+
+    // Check and create other missing tables
+    await this.createMissingTables();
   }
 
   private async createTables(): Promise<void> {
@@ -104,6 +289,113 @@ export class DatabaseService {
     `);
 
     // Create indexes for better performance
+    await this.db.execAsync(`
+      CREATE INDEX IF NOT EXISTS idx_workouts_date ON workouts(date);
+      CREATE INDEX IF NOT EXISTS idx_exercises_workout_id ON exercises(workout_id);
+      CREATE INDEX IF NOT EXISTS idx_sets_exercise_id ON sets(exercise_id);
+    `);
+  }
+
+  private async createExercisesTable(): Promise<void> {
+    if (!this.db) throw new Error('Database not initialized');
+
+    await this.db.execAsync(`
+      CREATE TABLE exercises (
+        id TEXT PRIMARY KEY,
+        workout_id TEXT NOT NULL,
+        name TEXT NOT NULL,
+        category TEXT NOT NULL,
+        total_duration INTEGER,
+        distance REAL,
+        calories INTEGER,
+        created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (workout_id) REFERENCES workouts (id) ON DELETE CASCADE
+      );
+    `);
+  }
+
+  private async createMissingTables(): Promise<void> {
+    if (!this.db) throw new Error('Database not initialized');
+
+    // Create sets table if missing
+    const setsTableCheck = await this.db.getFirstAsync(`
+      SELECT name FROM sqlite_master WHERE type='table' AND name='sets'
+    `) as any;
+
+    if (!setsTableCheck) {
+      await this.db.execAsync(`
+        CREATE TABLE sets (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          exercise_id TEXT NOT NULL,
+          reps INTEGER,
+          weight REAL,
+          duration INTEGER,
+          rest_time INTEGER,
+          distance REAL,
+          pace REAL,
+          notes TEXT,
+          created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (exercise_id) REFERENCES exercises (id) ON DELETE CASCADE
+        );
+      `);
+    }
+
+    // Create muscle groups table if missing
+    const muscleGroupsTableCheck = await this.db.getFirstAsync(`
+      SELECT name FROM sqlite_master WHERE type='table' AND name='exercise_muscle_groups'
+    `) as any;
+
+    if (!muscleGroupsTableCheck) {
+      await this.db.execAsync(`
+        CREATE TABLE exercise_muscle_groups (
+          exercise_id TEXT NOT NULL,
+          muscle_group TEXT NOT NULL,
+          PRIMARY KEY (exercise_id, muscle_group),
+          FOREIGN KEY (exercise_id) REFERENCES exercises (id) ON DELETE CASCADE
+        );
+      `);
+    }
+
+    // Create recommendations table if missing
+    const recommendationsTableCheck = await this.db.getFirstAsync(`
+      SELECT name FROM sqlite_master WHERE type='table' AND name='coach_recommendations'
+    `) as any;
+
+    if (!recommendationsTableCheck) {
+      await this.db.execAsync(`
+        CREATE TABLE coach_recommendations (
+          id TEXT PRIMARY KEY,
+          workout_id TEXT NOT NULL,
+          type TEXT NOT NULL,
+          category TEXT NOT NULL,
+          message TEXT NOT NULL,
+          priority TEXT NOT NULL,
+          timeframe TEXT NOT NULL,
+          completed INTEGER DEFAULT 0,
+          created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (workout_id) REFERENCES workouts (id) ON DELETE CASCADE
+        );
+      `);
+    }
+
+    // Create insights table if missing
+    const insightsTableCheck = await this.db.getFirstAsync(`
+      SELECT name FROM sqlite_master WHERE type='table' AND name='coach_insights'
+    `) as any;
+
+    if (!insightsTableCheck) {
+      await this.db.execAsync(`
+        CREATE TABLE coach_insights (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          workout_id TEXT NOT NULL,
+          insight TEXT NOT NULL,
+          created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+          FOREIGN KEY (workout_id) REFERENCES workouts (id) ON DELETE CASCADE
+        );
+      `);
+    }
+
+    // Create indexes
     await this.db.execAsync(`
       CREATE INDEX IF NOT EXISTS idx_workouts_date ON workouts(date);
       CREATE INDEX IF NOT EXISTS idx_exercises_workout_id ON exercises(workout_id);

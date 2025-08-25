@@ -1,4 +1,4 @@
-import { Workout, Exercise, Set, VoiceRecognitionResult, CoachRecommendation } from '@/types';
+import { Workout, Exercise, ExerciseSet, VoiceRecognitionResult, CoachRecommendation } from '@/types';
 import { databaseService } from '@/services/storage/DatabaseService';
 import { settingsService } from '@/services/storage/SettingsService';
 import { exerciseDatabase } from '@/data/exerciseDatabase';
@@ -193,7 +193,7 @@ export class WorkoutSessionService {
   }
 
   // Add a set to an exercise
-  async addSetToExercise(exerciseId: string, set: Set): Promise<void> {
+  async addSetToExercise(exerciseId: string, set: ExerciseSet): Promise<void> {
     if (!this.currentSession) {
       throw new Error('No active workout session');
     }

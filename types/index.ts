@@ -1,6 +1,6 @@
 // Core data types for Hey Coach application
 
-export interface Set {
+export interface ExerciseSet {
   reps?: number; // optional for time-based exercises
   weight?: number; // in lbs or kg
   duration?: number; // for time-based exercises (seconds)
@@ -13,7 +13,7 @@ export interface Set {
 export interface Exercise {
   id: string;
   name: string;
-  sets: Set[];
+  sets: ExerciseSet[];
   muscleGroups: string[];
   category: string; // strength, cardio, flexibility, yoga
   totalDuration?: number; // total time spent on exercise (seconds)
