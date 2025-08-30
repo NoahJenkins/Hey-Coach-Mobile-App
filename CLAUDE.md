@@ -41,7 +41,7 @@ Uses Expo Router with file-based routing:
 Comprehensive TypeScript interfaces in `types/index.ts`:
 - **Workout**: Contains exercises, coach recommendations, insights, and session metadata
 - **Exercise**: Supports strength, cardio, yoga, and flexibility with sets/duration/distance tracking
-- **Set**: Flexible structure for reps, weight, duration, rest time, pace, distance
+- **ExerciseSet**: Flexible structure for reps, weight, duration, rest time, pace, distance
 - **CoachRecommendation**: AI-generated recovery/nutrition/training advice with priority and timeframe
 - **UserSettings**: Preferences for auto-save, confirmation levels, units, default rest times
 

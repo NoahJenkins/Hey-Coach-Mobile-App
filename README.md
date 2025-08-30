@@ -1,50 +1,83 @@
-# Welcome to your Expo app 👋
+# Hey Coach Mobile App
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Hey Coach is a voice-powered workout tracking application designed to make logging your fitness progress seamless and intuitive. Built with React Native and Expo, this app acts as a personal AI coach in your pocket, allowing you to focus on your workout while it handles the tracking.
 
-## Get started
+## Features
 
-1. Install dependencies
+*   **Voice-Controlled Workouts:** Start, track, and complete your workouts using voice commands.
+*   **AI-Powered Coaching:** Get personalized recommendations and insights after each workout session.
+*   **Detailed Tracking:** Log exercises, sets, reps, weight, and duration.
+*   **Workout History:** Review your past workouts and track your progress over time.
+*   **Tab-Based Navigation:** Easily switch between the main dashboard, workout history, and settings.
+*   **Customizable Settings:** Adjust app settings to your preferences.
 
-   ```bash
-   npm install
-   ```
+## Tech Stack
 
-2. Start the app
+*   **Framework:** React Native with Expo
+*   **Language:** TypeScript
+*   **Navigation:** Expo Router
+*   **State Management:** React Context and custom services
+*   **Styling:** Styled Components
+*   **Local Storage:** Expo SQLite and AsyncStorage
+*   **AI:** OpenAI for voice recognition and coaching insights
 
-   ```bash
-   npx expo start
-   ```
+## Getting Started
 
-In the output, you'll find options to open the app in a
+### Prerequisites
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+*   Node.js (v18 or newer)
+*   Expo CLI
+*   An OpenAI API key
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+### Installation
 
-## Get a fresh project
+1.  Clone the repository:
+    ```bash
+    git clone https://github.com/your-username/hey-coach-mobile-app.git
+    cd hey-coach-mobile-app
+    ```
 
-When you're ready, run:
+2.  Install the dependencies:
+    ```bash
+    npm install
+    ```
 
-```bash
-npm run reset-project
-```
+3.  Set up your environment variables. Create a file named `.env` in the root of the project and add your OpenAI API key:
+    ```
+    OPENAI_API_KEY=your_openai_api_key
+    ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+### Running the App
 
-## Learn more
+*   To start the app on iOS:
+    ```bash
+    npm run ios
+    ```
 
-To learn more about developing your project with Expo, look at the following resources:
+*   To start the app on Android:
+    ```bash
+    npm run android
+    ```
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+*   To start the app on the web:
+    ```bash
+    npm run web
+    ```
 
-## Join the community
+## Project Structure
 
-Join our community of developers creating universal apps.
+The project is organized into the following main directories:
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+*   `app/`: Contains the application screens and navigation setup using Expo Router.
+    *   `(tabs)/`: Defines the tab-based navigation layout and screens.
+*   `assets/`: Stores static assets like images and fonts.
+*   `components/`: Includes reusable UI components used throughout the app.
+*   `constants/`: Holds constant values, such as color schemes.
+*   `data/`: Contains static data, like the exercise database.
+*   `hooks/`: Stores custom React hooks.
+*   `services/`: Contains the business logic for different parts of the application.
+    *   `ai/`: Handles interactions with the OpenAI API.
+    *   `database/`: Manages the local SQLite database.
+    *   `storage/`: Provides services for local storage.
+    *   `workout/`: Manages the workout session logic.
+*   `types/`: Defines the TypeScript types used in the project.
